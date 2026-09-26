@@ -1,0 +1,7 @@
+run = "cd backend && npm run dev"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "cd backend && npm run build && npm start"]
