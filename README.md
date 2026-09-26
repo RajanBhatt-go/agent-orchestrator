@@ -2,6 +2,17 @@
 
 **Multi-Tenant AI Workflow Automation & Agent Orchestrator**
 
+<p align="center">
+  <a href="https://replit.com/github/RajanBhatt-go/agent-orchestrator">
+    <img src="https://img.shields.io/badge/Run%20on-Replit-667881?style=for-the-badge&logo=replit" alt="Run on Replit">
+  </a>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/React%20Flow-FF007F?style=for-the-badge&logo=react&logoColor=white" alt="React Flow">
+  <img src="https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify">
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+</p>
+
 A self-hosted **Zapier + AutoGPT** alternative where users create multi-step asynchronous AI agent pipelines. Drag nodes onto a canvas, connect them into a DAG, and watch execution stream live via WebSockets. Built for and on **Replit**.
 
 ---
@@ -270,17 +281,28 @@ agent-orchestrator/
 
 ## Quick Start
 
-### Prerequisites
+### ☁️ On Replit (recommended — no setup needed)
 
-- [Node.js 20+](https://nodejs.org)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL + Redis)
-- [OpenRouter API Key](https://openrouter.ai/keys) (free tier available)
+| Step | Action |
+|------|--------|
+| 1 | Go to **[replit.com/github/RajanBhatt-go/agent-orchestrator](https://replit.com/github/RajanBhatt-go/agent-orchestrator)** |
+| 2 | Click **Import** — Replit clones the repo and installs deps automatically |
+| 3 | Enable **PostgreSQL** in the Database tab (sidebar) |
+| 4 | Add an `OPENROUTER_API_KEY` secret (Tools → Secrets) — get one free at [openrouter.ai/keys](https://openrouter.ai/keys) |
+| 5 | Run `npm run db:push` in the Shell tab to create tables |
+| 6 | Hit **▶ Run** |
 
-### Setup
+Your agent orchestrator is live at `https://agent-orchestrator-<username>.replit.dev`.
+
+> 📖 **Full Replit guide** with screenshots, Redis setup options, secrets table, and troubleshooting → [see Replit Deployment section](#-running-on-replit)
+
+### 💻 Local Development
+
+**Prerequisites:** Node.js 20+, Docker Desktop, OpenRouter API key.
 
 ```bash
 # 1. Clone and install
-git clone <your-repo-url> agent-orchestrator
+git clone https://github.com/RajanBhatt-go/agent-orchestrator
 cd agent-orchestrator
 npm run setup
 
@@ -288,17 +310,17 @@ npm run setup
 cp backend/.env.example backend/.env
 # Edit backend/.env → set OPENROUTER_API_KEY
 
-# 3. Start infrastructure
+# 3. Start PostgreSQL + Redis
 docker compose up -d
 
 # 4. Create database tables
 npm run db:push
 
-# 5. Start development (backend + frontend)
+# 5. Start backend + frontend
 npm run dev
 ```
 
-### Access
+Then open **http://localhost:5173**.
 
 | Service | URL |
 |---------|-----|
@@ -306,14 +328,13 @@ npm run dev
 | **Backend API** | http://localhost:3001 |
 | **WebSocket** | ws://localhost:3001 |
 
-### First Run
+### First Run (both platforms)
 
-1. Open http://localhost:5173
-2. Enter a tenant slug (e.g., `my-team`), click **Create Tenant**
-3. Drag nodes from the left palette onto the canvas
-4. Connect nodes by dragging between handles
-5. Configure each node by clicking it
-6. Click **Run** to execute — watch events stream in real-time
+1. Open the app → enter a tenant name/slug → click **Create Tenant**
+2. Drag a **Trigger** node and an **LLM Call** node onto the canvas
+3. Connect them (Trigger's bottom handle → LLM Call's left handle)
+4. Click the LLM Call node → set User Prompt to `"Reply with a haiku about AI"`
+5. Click **Run** — watch live execution events stream in the right panel
 
 ---
 
@@ -434,23 +455,133 @@ Event types:
 
 ---
 
-## Replit Deployment
+## 🚀 Running on Replit
 
-1. Create a new Replit from this repo
-2. Add secrets in Replit's **Tools → Secrets** tab:
+This is the primary platform the project was built for. Here's the exact setup flow.
 
-| Secret | Value |
-|--------|-------|
-| `DATABASE_URL` | Replit PostgreSQL URL (from the DB tab) |
-| `REDIS_HOST` | Replit Redis URL (from the DB tab) or `localhost` |
-| `REDIS_PORT` | `6379` |
-| `OPENROUTER_API_KEY` | Your OpenRouter API key |
-| `CORS_ORIGIN` | Your Replit URL |
+### Step 1 — Import from GitHub
 
-3. The `.replit` file auto-configures the run command
-4. The frontend is available at `https://<your-repl>.replit.dev`
+Go to [replit.com](https://replit.com/~) and click **Create Repl** → **Import from GitHub** → paste:
 
-> **Note**: On Replit, you may need to start Redis manually or use the Replit Redis addon. The worker runs in-process by default — set `START_WORKER=false` and run a separate worker terminal for production.
+```
+https://github.com/RajanBhatt-go/agent-orchestrator
+```
+
+Or use the **Replit CLI** (if you have the Replit desktop app / CLI):
+
+```
+repl create agent-orchestrator
+```
+
+Replit will clone the repo, detect the `.replit` config, and install npm dependencies automatically.
+
+### Step 2 — Set Up PostgreSQL
+
+| | |
+|--|--|
+| 1 | Open the **Database** tab in the sidebar (cylinder icon) |
+| 2 | Click **Add Database** → select **PostgreSQL** |
+| 3 | Replit auto-creates a database and injects the `DATABASE_URL` secret |
+
+⏱ Wait ~30 seconds for it to provision.
+
+### Step 3 — Set Up Redis
+
+You have two options:
+
+**Option A — Upstash (recommended, free):**
+1. Go to [upstash.com/redis](https://upstash.com/redis), create a free account
+2. Create a **Global Redis** database (free tier: 10MB — plenty for queues)
+3. Copy the `UPSTASH_REDIS_REST_URL` — it looks like:
+   `https://us1-clean-koi-12345.upstash.io`
+4. In Replit, add a **Secret** (Tools → Secrets):
+   - Key: `REDIS_HOST`
+   - Value: `us1-clean-koi-12345.upstash.io` (the hostname extracted from the URL)
+5. Also add `REDIS_PORT=6379`
+
+**Option B — Local (simpler, but no persistence between restarts):**
+- Just set `REDIS_HOST=localhost` in Secrets
+- Redis won't persist across repl restarts
+
+### Step 4 — Add Secrets
+
+**Tools → Secrets**, add these:
+
+| Secret | Example Value | Where to get it |
+|--------|---------------|-----------------|
+| `OPENROUTER_API_KEY` | `sk-or-v1-abc123...` | [openrouter.ai/keys](https://openrouter.ai/keys) — free signup |
+| `DATABASE_URL` | *(auto-filled by Replit)* | Replit adds this when you enable PostgreSQL |
+| `REDIS_HOST` | `localhost` or `us1-clean-koi-12345.upstash.io` | See Step 3 |
+| `REDIS_PORT` | `6379` | Standard Redis port |
+| `CORS_ORIGIN` | `https://agent-orchestrator.yourname.replit.dev` | Your Replit URL (see below) |
+
+> 🔑 **Get your Replit URL**: Look at the URL bar after the repl starts — it's `https://<repl-name>-<username>.replit.dev`. Use that as `CORS_ORIGIN`.
+
+### Step 5 — Create Database Tables
+
+Open the **Shell** tab and run:
+
+```bash
+npm run db:push
+```
+
+You should see output like:
+```
+> drizzle-kit push
+✓ 5 tables created: tenants, workflows, workflow_runs, step_executions, schedule_triggers
+```
+
+### Step 6 — Run
+
+Hit the big **▶ Run** button. After a few seconds you'll see:
+
+```
+╔═══════════════════════════════════════════════════╗
+║  🤖 Agent Orchestrator Server                     ║
+║  HTTP  → http://0.0.0.0:3001                      ║
+║  WS    → ws://0.0.0.0:3001                        ║
+║  Health→ http://0.0.0.0:3001/health               ║
+╚═══════════════════════════════════════════════════╝
+[Worker] BullMQ worker started
+[WS] WebSocket server initialized
+```
+
+### Step 7 — First Workflow
+
+1. Open your Replit URL (`https://agent-orchestrator.yourname.replit.dev`)
+2. Enter a **Tenant Name** (e.g. `My Team`) and **Slug** (e.g. `my-team`)
+3. Click **Create Tenant**
+4. Drag a **Trigger** node and an **LLM Call** node onto the canvas
+5. Connect Trigger's bottom handle → LLM Call's left handle
+6. Click the LLM Call node → set User Prompt to `"Reply with a haiku about AI"`
+7. Click **Run** — watch the live execution stream in the right panel
+
+### Replit Tips
+
+| Problem | Fix |
+|---------|-----|
+| **"ECONNREFUSED Redis"** | Redis isn't running. Use Upstash (Step 3, Option A) instead of localhost |
+| **"relation 'tenants' does not exist"** | Run `npm run db:push` in Shell — tables weren't created |
+| **Frontend blank / 503** | Add `CORS_ORIGIN` secret with your exact Replit URL |
+| **"401 x-tenant-id header required"** | Go back to your Replit URL and create a tenant via the modal |
+| **LLM calls fail** | Verify `OPENROUTER_API_KEY` is set and has credits |
+| **Want to restart clean** | Delete your Repl and re-import. Or in Shell: `rm -rf .data && npm run db:push` |
+
+### Architecture on Replit
+
+```
+Replit VM
+├── Fastify server (port 3001)
+│   ├── REST API endpoints
+│   ├── Socket.IO WebSocket server
+│   └── BullMQ worker (in-process)
+├── PostgreSQL (managed by Replit)
+├── Redis (Upstash or local)
+└── Static frontend served by Vite dev server (port 5173)
+    └── Vite proxies /api and /socket.io to port 3001
+```
+
+The worker runs **in-process** by default (`START_WORKER=true`). For production you'd run it as a separate process, but on Replit's free tier the in-process mode works fine for moderate workloads.
 
 ---
 
